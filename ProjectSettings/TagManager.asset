@@ -5,14 +5,15 @@ TagManager:
   serializedVersion: 3
   tags:
   - Enemy
+  - Coin
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Ignore Enemy Collision
   - Water
   - UI
-  - 
+  - Particles
   - 
   - 
   - 
@@ -41,6 +42,12 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Particles
+    uniqueID: 911901433
+    locked: 0
+  - name: Projectiles
+    uniqueID: 477262189
     locked: 0
   m_RenderingLayers:
   - Default

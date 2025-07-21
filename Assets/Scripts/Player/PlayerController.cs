@@ -1,26 +1,61 @@
+using System;
 using System.Collections.Generic;
 using Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.PlayerLoop;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
-    public int health = 100;
-    public int money = 5;
+    public static PlayerController Instance { get; private set; }
+    // Public
+    public double damageMultplier = 1;
+    public double healthMultiplier = 1;
+    public double speedMultiplier = 1;
+    private double _attackSpeedMultiplier = 1;
+    public double AttackSpeedMultiplier
+    {
+        get { return _attackSpeedMultiplier; }
+        set
+        {
+            _attackSpeedMultiplier = value < 0 ? 0 : value;
+            UIController.Instance.UpdateStats(this);
+        }
+    }
+    private int _health;
+
+    public int Health
+    {
+        get { return _health; } 
+        set { 
+            _health = value <= 0 ? 0 : value; 
+            UIController.Instance.UpdateStats(this);
+        }
+    }
+    private int _money;
+    public int Money { get { return _money; } set { _money = value <= 0 ? 0 : value; UIController.Instance.UpdateStats(this); } }
     public float moveSpeed = 5f;
-    private Rigidbody2D _rigidbody;
-    public bool isInBuildMode = false;
+    public List<Weapon> weapons;
+    public bool isInBuildMode;
     public Vector3 tileCheckCoordinates = Vector3.zero;
+    public List<ExtendedTile> availableTiles;
+    public TileManager tileManager;
+    private int _kills = 0;
+    public int Kills { get { return _kills; } set { _kills = value <= 0 ? 0 : value; UIController.Instance.UpdateStats(this);} }
+    private int _totalDamage = 0;
+    public int TotalDamage { get { return _totalDamage; } set { _totalDamage = value <= 0 ? 0 : value; UIController.Instance.UpdateStats(this);} }
+    // Private
+    private Rigidbody2D _rigidbody;
     private PlayerInput _playerInput;
     private PlayerControls _playerControls;
     private GameObject _player;
     private Builder _builder;
     private CircleCollider2D _collider;
-    public List<ExtendedTile> availableTiles;
-    public TileManager tileManager;
-    public TMP_Text moneyText;
+    
     
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -44,6 +79,16 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        
+        _money = 50;
+        _health = 100;
+        
         _playerInput = GetComponent<PlayerInput>();
         
         _playerControls = new PlayerControls();
@@ -51,83 +96,119 @@ public class PlayerController : MonoBehaviour
         _playerControls.Gameplay.MousePress.performed += ScreenTouched;
         _playerControls.Gameplay.EnterShopMode.performed += EnterShop;
 		_playerControls.Gameplay.TimeControl.performed += TimeControl;
+        _playerControls.Gameplay.PauseGame.performed += TogglePauseMenu;
+        _playerControls.Gameplay.ShowStatsMenu.started += ShowStatsMenu;
+        _playerControls.Gameplay.ShowStatsMenu.canceled += ShowStatsMenu;
     }
 
-	public void TimeControl(InputAction.CallbackContext context) {
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!other.CompareTag("Enemy")) return;
+        Health -= other.gameObject.GetComponent<EnemyController>().damage;
+        Destroy(other.gameObject);
+    }
+
+    private void ShowStatsMenu(InputAction.CallbackContext context)
+    {
+        if (context.started) UIController.Instance.ShowStatsOverlay();
+        if (context.canceled) UIController.Instance.HideStatsOverlay();
+    }
+
+    public void TimeControl(InputAction.CallbackContext context) {
 		Debug.Log("Time wants to be controlled");
 	}
 
     public void EnterShop(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        if (context.performed && UIController.Instance.Gamestate == UIController.Gamestates.Running)
         {
-            _builder.drawTile = availableTiles[0].DrawTile;
-            _builder.ToggleBuildMode();
+            // Update build mode variable
+            isInBuildMode = !isInBuildMode;
+            
+            // If the player isn't in build mode
+            if (isInBuildMode)
+            {
+                UIController.Instance.SetShop(true);
+                tileManager.GenerateOutlineTiles(new Vector3Int(0, 0, 0));;
+                tileManager.RenderTilesOnOutline(new ExtendedTile(new Vector3Int(0, 0, 0), _builder.validTileIndicator, true, false, false, false, true));
+                return;
+            }
+            // _builder.drawTile = availableTiles[0];
+            // _builder.ToggleBuildMode();
+            UIController.Instance.SetShop(false);
+            tileManager.ClearOutline();
+            
         }
     }
-    
+
     public void ScreenTouched(InputAction.CallbackContext context)
     {
-        if (true)
+        if (context.performed && SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Game"))
         {
+            // What to figure out:
+            // Where do we want to build
+            // What do we want to build
             var position = Camera.main.ScreenToWorldPoint(_playerControls.Gameplay.MousePosition.ReadValue<Vector2>());
-            position.z = 0;
             var tilePosition = _builder.tilemap.WorldToCell(position);
-            _builder.Build(new ExtendedTile(tilePosition, availableTiles[0].DrawTile, false, false, false, false));
+            tilePosition.z = 0;
+            
+            var tileToBuild = availableTiles[1];
+            tileToBuild.Position = tilePosition;
+            tileToBuild.parentPlayer = this;
+            _builder.Build(tileToBuild);
         }
     }
     
     // Apply Movement in FixedUpdate
     void FixedUpdate()
     {
+        if (Health <= 0) UIController.Instance.SetGameState(UIController.Gamestates.Dead);
         var movement = _playerControls.Gameplay.Move.ReadValue<Vector2>() * moveSpeed;
         _rigidbody.MovePosition(_rigidbody.position + movement * Time.fixedDeltaTime);
-        moneyText.SetText(money.ToString());
+        // Todo: This does absolutely NOT need to be called in FixedUpdate
+        Attack();
     }
     
-    void Update()
+    public void TogglePauseMenu(InputAction.CallbackContext context)
     {
-        // Todo:
-        //  - Revamp to work with Unity InputSystem for Cross Platform support
-        //  - Input mapping
-        
-        /*
-        // Enter build Mode when 1-3 key is pressed
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (context.performed)
         {
-            // If the player isn't in build mode, enter and return
-            if (!isInBuildMode)
+            switch (Time.timeScale)
             {
-                _builder.ToggleBuildMode();
+                // Checking for the time scale is terrible
+                // but will do for now
+                case 0:
+                    UIController.Instance.SetGameState(UIController.Gamestates.Running);
+                    break;
+                
+                default:
+                    UIController.Instance.SetGameState(UIController.Gamestates.Pause);
+                    break;
             }
-            // If build mode is already active, just change the tile
-            _builder.drawTile = availableTiles[0];
         }
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            if (!isInBuildMode)
-            {
-                _builder.ToggleBuildMode();
-            }
-            _builder.drawTile = availableTiles[1];
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            if (!isInBuildMode)
-            {
-                _builder.ToggleBuildMode();
-            }
-            _builder.drawTile = availableTiles[2];
-        }
-        */
     }
 
-    public void LeaveGame()
+    // Gets called on each iteration of FixedUpdate
+    void Attack()
     {
-        // Todo:
-        //  - Pause the game - done (Tile manager still works but I pretend I don't know)
-        //  - Show pause menu - tbd
-        Time.timeScale = Time.timeScale == 0 ? 1 : 0;
-        Application.Quit();
+        var activeEnemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (Weapon weapon in weapons)
+        {
+            // Some preparation:
+            //      - Subtract the elapsed time from the cooldown
+            //      - Set the parent player to this PlayerController Instance
+            //      - Set the active enemies to the enemies currently on the screen
+            // Note: Could be done once on Start(), but oh well why not waste resources?
+            weapon.Cooldown -= Time.deltaTime;
+            weapon.parentPlayer = this;
+            weapon.activeEnemies = activeEnemies;
+            
+            if (weapon.Cooldown <= 0 && weapon.CanAttackOneOf(activeEnemies))
+            {
+                weapon.Cooldown = weapon.fireRate / AttackSpeedMultiplier;
+                // Instantiate a new Weapon and associate it with this PlayerController Instance
+                Instantiate(weapon, new Vector3(transform.position.x, transform.position.y, 0), Quaternion.identity);
+            }
+        }
     }
 }

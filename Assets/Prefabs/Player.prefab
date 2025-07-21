@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 1470164825417919603}
   - component: {fileID: 663610016861430126}
   - component: {fileID: 8122723645546569934}
-  - component: {fileID: 4036964071578180304}
   - component: {fileID: 926285382507097248}
   - component: {fileID: 6457263038992054140}
   m_Layer: 0
@@ -137,26 +136,19 @@ MonoBehaviour:
   highlightedTile: {fileID: 11400000, guid: 296b9bd2f8bfffd669ac4931eb846d87, type: 2}
   invalidTile: {fileID: 11400000, guid: 02d49e00039a23081ad1937f97e9c82e, type: 2}
   spawnerTile: {fileID: 11400000, guid: 7f870c6507fd60f47b053b58e70abb45, type: 2}
-  drawTile: {fileID: 0}
-  validTiles: []
+  enemySpawnerPrefab: {fileID: 0}
   previousTilePosition: {x: 0, y: 0, z: 0}
-  previousTile: {fileID: 0}
+  previousTile:
+    DrawTile: {fileID: 0}
+    HasCollision: 0
+    IsEmpty: 0
+    IsUiTile: 0
+    IsSpawnerTile: 0
+    IsIndicator: 0
+    Position: {x: 0, y: 0, z: 0}
+    linkedObjects: []
+    Price: 0
   validTileIndicator: {fileID: 11400000, guid: fafae19790e59487697cca8bc5aaf654, type: 2}
---- !u!114 &4036964071578180304
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1913172396928611700}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d203db4608efb6c318eded74e319193b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tile1: {fileID: 11400000, guid: 7b6be9164b66667498e80dd2fc76a377, type: 2}
-  tile2: {fileID: 11400000, guid: b544936d386e9d5cbbb12309b936357f, type: 2}
-  tile3: {fileID: 11400000, guid: 78838f7587116e54c87b908df5c0cbd5, type: 2}
 --- !u!114 &926285382507097248
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,10 +161,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf4a4de1d6aeda7aeafbef89055eaa57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  damageMultplier: 1
+  healthMultiplier: 1
+  speedMultiplier: 1
+  attackSpeedMultiplier: 1
+  weapons: []
   health: 100
+  money: 5
   moveSpeed: 2.5
   isInBuildMode: 0
   tileCheckCoordinates: {x: 0, y: 0, z: 0}
+  availableTiles: []
+  tileManager: {fileID: 0}
+  moneyText: {fileID: 0}
+  PauseMenu: {fileID: 0}
+  MameOverMenu: {fileID: 0}
+  IngameOverlay: {fileID: 0}
+  ShopOverlay: {fileID: 0}
 --- !u!58 &6457263038992054140
 CircleCollider2D:
   m_ObjectHideFlags: 0

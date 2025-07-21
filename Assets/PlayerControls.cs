@@ -144,6 +144,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ShowStatsMenu"",
+                    ""type"": ""Button"",
+                    ""id"": ""a2afc7de-b092-478a-830a-a77395fa2651"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -399,6 +408,28 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""TimeControl"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fefda159-fdae-44e1-9382-e381619159ad"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ShowStatsMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0ed80d19-363d-43c0-a0ab-3fd91f2c3ad1"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ShowStatsMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -891,6 +922,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Gameplay_MousePress = m_Gameplay.FindAction("MousePress", throwIfNotFound: true);
         m_Gameplay_MousePosition = m_Gameplay.FindAction("MousePosition", throwIfNotFound: true);
         m_Gameplay_TimeControl = m_Gameplay.FindAction("TimeControl", throwIfNotFound: true);
+        m_Gameplay_ShowStatsMenu = m_Gameplay.FindAction("ShowStatsMenu", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -990,6 +1022,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_MousePress;
     private readonly InputAction m_Gameplay_MousePosition;
     private readonly InputAction m_Gameplay_TimeControl;
+    private readonly InputAction m_Gameplay_ShowStatsMenu;
     /// <summary>
     /// Provides access to input actions defined in input action map "Gameplay".
     /// </summary>
@@ -1025,6 +1058,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Gameplay/TimeControl".
         /// </summary>
         public InputAction @TimeControl => m_Wrapper.m_Gameplay_TimeControl;
+        /// <summary>
+        /// Provides access to the underlying input action "Gameplay/ShowStatsMenu".
+        /// </summary>
+        public InputAction @ShowStatsMenu => m_Wrapper.m_Gameplay_ShowStatsMenu;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1069,6 +1106,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @TimeControl.started += instance.OnTimeControl;
             @TimeControl.performed += instance.OnTimeControl;
             @TimeControl.canceled += instance.OnTimeControl;
+            @ShowStatsMenu.started += instance.OnShowStatsMenu;
+            @ShowStatsMenu.performed += instance.OnShowStatsMenu;
+            @ShowStatsMenu.canceled += instance.OnShowStatsMenu;
         }
 
         /// <summary>
@@ -1098,6 +1138,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @TimeControl.started -= instance.OnTimeControl;
             @TimeControl.performed -= instance.OnTimeControl;
             @TimeControl.canceled -= instance.OnTimeControl;
+            @ShowStatsMenu.started -= instance.OnShowStatsMenu;
+            @ShowStatsMenu.performed -= instance.OnShowStatsMenu;
+            @ShowStatsMenu.canceled -= instance.OnShowStatsMenu;
         }
 
         /// <summary>
@@ -1440,6 +1483,13 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTimeControl(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ShowStatsMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnShowStatsMenu(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

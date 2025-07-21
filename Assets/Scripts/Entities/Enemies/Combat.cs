@@ -24,7 +24,7 @@ public class Combat : MonoBehaviour
         if (Vector3.Distance(transform.position, targetPlayer.transform.position) < 0.1f && lastHit + 0.2f < Time.time)
         {
             Debug.Log("Attempting to hit player");
-            targetPlayerController.health -= damage;
+            targetPlayerController.Health -= damage;
             lastHit = Time.time;
         }
     }

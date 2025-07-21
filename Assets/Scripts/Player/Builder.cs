@@ -17,14 +17,10 @@ public class Builder : MonoBehaviour
     public Tile spawnerTile;
     // The Enemy Spawner game object that goes along spawner tiles
     public GameObject enemySpawnerPrefab;
-    // The Tile the Player draws with
-    public Tile drawTile;
-    // List to store the valid tiles
-    public List<Vector3Int> validTiles = new List<Vector3Int>();
     // The position of the previous hovered Tile
     public Vector3Int previousTilePosition;
     // The Tile that was applied to the previously hovered cell
-    public TileBase previousTile;
+    public ExtendedTile previousTile;
     // Indicator that should be used to mark valid tiles
     public Tile validTileIndicator;
     
@@ -38,77 +34,64 @@ public class Builder : MonoBehaviour
         _playerController = _player.GetComponent<PlayerController>();
     }
     
-    // Called every 0.02 Seconds
+    /*
     void FixedUpdate()
     {
         if (_playerController.isInBuildMode)
         {
-            // If the previous tile was not undefined
+            // If previous tile position is anything but (0, 0, 0)
             if (previousTilePosition != Vector3Int.zero)
             {
-                // Fill the previous spot with the original tile
-                tilemap.SetTile(previousTilePosition, previousTile);
+                // Overwrite the tile at this position with the previous tile
+                _playerController.tileManager.OverwriteTile(previousTile);
+                // Reset the previous tile position to be (0, 0, 0)
                 previousTilePosition = Vector3Int.zero;
             }
             
-            // Translate Mouse Position to tile position
+            // Translate Mouse Position to tile position and set it's z index to 0
             var mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             var highlightedTilePosition = tilemap.WorldToCell(mousePosition);
             highlightedTilePosition.z = 0;
             
             // Store Tile position and type
             previousTilePosition = highlightedTilePosition;
-            var tileAsExtendedTile = _playerController.tileManager.GetTileAt(highlightedTilePosition);
-            previousTile = tilemap.GetTile<TileBase>(highlightedTilePosition);
+            ExtendedTile tileAsExtendedTile = _playerController.tileManager.GetTileAt(highlightedTilePosition);
+            previousTile = _playerController.tileManager.GetTileAt(previousTilePosition);
             // If the Tile is a valid tile, render highlight
             if (tileAsExtendedTile != null)
             {
                 if (tileAsExtendedTile.IsIndicator)
                 {
-                    if (_playerController.money >= 5)
+                    if (_playerController.money >= drawTile.Price)
                     {
-                        tilemap.SetTile(highlightedTilePosition, highlightedTile);
+						_playerController.tileManager.OverwriteTile(new ExtendedTile(highlightedTilePosition, highlightedTile, true, false, true, true));
                         return;
                     }
 
-                    tilemap.SetTile(highlightedTilePosition, invalidTile);
+                    _playerController.tileManager.OverwriteTile(new ExtendedTile(highlightedTilePosition, invalidTile, true, false, true, true));
                 }
             }
         }
     }
+    */
     
     // Method that handles Building - as the name implies
-    public void Build(ExtendedTile tile)
+    public void Build(ExtendedTile tileToBuild)
     {
-        // This eats performance like a champ when the list of valid tiles gets larger
-        // Todo: Create a completely new, serializable Tile Class
-        //  Requirements:
-        //      - Tile Preis - Price, float, public
-        //      - Tile Bezeichnung - Name, string, public
-        //      - Wurde das Tile bereits freigeschaltet - Unlocked, bool, public
-        //      - IsValidTile() - bool, public: should be more efficient than to check the List every frame
-        //  Maybe as part of TileManager
+        // Todo:
+        //      For some reason, this works exactly once before completely falling apart
+        //      No clue why or what
+        var selectedTile = _playerController.tileManager.GetTileAt(tileToBuild.Position);
 
-        var currentTile = _playerController.tileManager.GetTileAt(tile.Position);
-        
-        if (currentTile != null)
-        {
-            if (currentTile.IsIndicator /*&& _playerController.money >= drawTile.Price*/)
-            {
-                Debug.Log("Found tile to be valid");
-                _playerController.tileManager.OverwriteTile(tile);
-                previousTilePosition = Vector3Int.zero;
-                // _playerController.money -= drawTile.Price;
-                _playerController.tileManager.GenerateOutlineTiles(tile.Position);
-                _playerController.tileManager.UpdateHighlightTiles();
-                return;
-            }
-            
-            Debug.Log("Tile is null");
-            return;
-        }
-        
-        Debug.Log("Tile is invalid");
+        if (selectedTile == null) return; // Tile does not exist
+        if (!selectedTile.IsUiTile) return; // Tile cannot be built on
+        if (_playerController.Money < tileToBuild.Price) return; // Player doesn't have enough moneydw
+
+        tileToBuild.Position = selectedTile.Position;
+        _playerController.tileManager.OverwriteTile(tileToBuild);
+        // previousTilePosition = Vector3Int.zero;
+        _playerController.Money -= tileToBuild.Price;
+        _playerController.tileManager.RenderTilesOnOutline(new ExtendedTile(new Vector3Int(0, 0, 0), validTileIndicator, true, false, false, false, true));
     }
 
     // Render all determined spawner tiles (see TileManager for more info)
@@ -153,26 +136,5 @@ public class Builder : MonoBehaviour
         }
         
         _playerController.tileManager.AddTileArray(offsets, _playerController.availableTiles[0]);
-    }
-
-    public void ToggleBuildMode()
-    {
-        if (_playerController.isInBuildMode)
-        {
-            // Reset build mode variable for the player controller
-            _playerController.isInBuildMode = false;
-            _playerController.tileManager.GenerateOutlineTiles(_playerController.tileCheckCoordinates);
-            _playerController.tileManager.DisableHighlightVisibility();
-        }
-
-        else
-        {
-            // Set build mode variable for the player controller
-            _playerController.isInBuildMode = true;
-            // Determine valid/collision tiles
-            _playerController.tileManager.GenerateOutlineTiles(_playerController.tileCheckCoordinates);
-            _playerController.tileManager.EnableHighlightVisibility();
-            _playerController.tileManager.UpdateHighlightTiles();
-        }
     }
 }

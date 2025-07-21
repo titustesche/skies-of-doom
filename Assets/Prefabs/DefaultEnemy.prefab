@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 2185815548523493820}
   - component: {fileID: 4550077290327104436}
   - component: {fileID: 2053303975234510460}
-  - component: {fileID: 4326649359360490981}
   - component: {fileID: -5253251490262845632}
   - component: {fileID: -25545385734444895}
   m_Layer: 0
@@ -105,25 +104,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 2
   damage: 5
-  health: 100
+  health: 20
   coinPrefab: {fileID: 7269604963939144034, guid: d6a5c2e16460da2ee80ff8a389896602, type: 3}
---- !u!114 &4326649359360490981
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4687552511180598035}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 659b25e9bc5c0f073a63fd6515ac5a09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  health: 15
-  damage: 5
-  targetPlayer: {fileID: 0}
-  targetPlayerController: {fileID: 0}
-  lastHit: 0
+  bloodParrticleSystem: {fileID: 4826949014921856559, guid: 617db1f7f8fce73c1a8ca6f4b99d358c, type: 3}
 --- !u!50 &-5253251490262845632
 Rigidbody2D:
   serializedVersion: 5
@@ -146,7 +129,7 @@ Rigidbody2D:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0

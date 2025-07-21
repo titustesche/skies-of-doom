@@ -46,19 +46,23 @@
     <Analyzer Include="/home/titus/Unity/Hub/Editor/6000.0.45f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets/UI/UIControllerDummy.cs" />
+    <Compile Include="Assets/Scripts/Weapons/Weapon Scripts/Pebble.cs" />
+    <Compile Include="Assets/Shop/ShopController.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerController.cs" />
+    <Compile Include="Assets/UI/UIController.cs" />
     <Compile Include="Assets/Scripts/Entities/Enemies/Combat.cs" />
+    <Compile Include="Assets/DamageEmitter.cs" />
     <Compile Include="Assets/EnemySpawner.cs" />
     <Compile Include="Assets/Scripts/Weapons/Weapon.cs" />
     <Compile Include="Assets/Scripts/Entities/Enemies/EnemyController.cs" />
-    <Compile Include="Assets/BasicEnemy.cs" />
-    <Compile Include="Assets/OnClick.cs" />
-    <Compile Include="Assets/WeaponController.cs" />
+    <Compile Include="Assets/Killswitch.cs" />
     <Compile Include="Assets/CoinController.cs" />
     <Compile Include="Assets/Scripts/Weapons/Weapon Scripts/CirecleOfDoom.cs" />
     <Compile Include="Assets/Scripts/Gameplay/TileManager.cs" />
     <Compile Include="Assets/PlayerControls.cs" />
     <Compile Include="Assets/Scripts/Player/Builder.cs" />
+    <Compile Include="Assets/Scripts/Start Menu/InterfaceManager.cs" />
     <Compile Include="Assets/ExtendedTile.cs" />
     <None Include="Assets/TextMesh Pro/Shaders/TMPro.cginc" />
     <None Include="Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile Overlay.shader" />

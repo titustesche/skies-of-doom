@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -18,14 +19,24 @@ public class ExtendedTile
     public bool IsIndicator;
     // Position of the Tile
     public Vector3Int Position;
+    // All game objects the tile has spawned
+    public List<GameObject> linkedObjects = new List<GameObject>();
+    // Price of the Tile
+    public int Price;
+    // The player who placed the tile
+    public PlayerController parentPlayer;
 
-    public ExtendedTile(Vector3Int position, Tile tile = null, bool isUiTile = false, bool isSpawnerTile = false, bool isEmpty = false, bool isIndicator = false)
+    public ExtendedTile(Vector3Int position, Tile tile = null, bool isUiTile = false, bool isSpawnerTile = false, bool isEmpty = false, bool isIndicator = false, bool hasCollision = false, int price = 0)
     {
-        this.DrawTile = tile;
-        this.IsUiTile = isUiTile;
-        this.IsSpawnerTile = isSpawnerTile;
-        this.IsEmpty = isEmpty;
-        this.IsIndicator = isIndicator;
-        this.Position = position;
+        DrawTile = tile;
+        IsUiTile = isUiTile;
+        IsSpawnerTile = isSpawnerTile;
+        IsEmpty = isEmpty;
+        IsIndicator = isIndicator;
+        Position = position;
+        HasCollision = hasCollision;
+        Price = price;
     }
+    
+    
 }

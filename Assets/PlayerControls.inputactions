@@ -58,6 +58,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "ShowStatsMenu",
+                    "type": "Button",
+                    "id": "a2afc7de-b092-478a-830a-a77395fa2651",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -313,6 +322,28 @@
                     "action": "TimeControl",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "fefda159-fdae-44e1-9382-e381619159ad",
+                    "path": "<Keyboard>/tab",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ShowStatsMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0ed80d19-363d-43c0-a0ab-3fd91f2c3ad1",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ShowStatsMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },

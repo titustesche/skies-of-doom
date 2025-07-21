@@ -6,8 +6,14 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
+    path: Assets/Scenes/Main Menu.unity
+    guid: a81479b0996d6e4178422f4c51430dfa
+  - enabled: 1
+    path: Assets/Scenes/Game.unity
     guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/Meta Progression.unity
+    guid: f02a208d2d6642f6da0261facd99f625
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 56b691c8970e51b3bbbadf102fbad2ae, type: 3}
   m_UseUCBPForAssetBundles: 0
