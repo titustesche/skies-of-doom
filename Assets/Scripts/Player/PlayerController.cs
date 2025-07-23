@@ -1,13 +1,8 @@
-using System;
 using System.Collections.Generic;
 using Gameplay;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
-using UnityEngine.Tilemaps;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 public class PlayerController : MonoBehaviour
@@ -45,7 +40,7 @@ public class PlayerController : MonoBehaviour
         set {
             _money = value <= 0 ? 0 : value;
             UIController.Instance.UpdateStats(this);
-            if (UIController.Instance.Gamestate == UIController.Gamestates.Shop) ShopController.Instance.UpdateTileShop();
+            if (GamestateManager.Gamestate == GamestateManager.Gamestates.Shop) ShopController.Instance.UpdateTileShop();
         }
     }
     
@@ -93,6 +88,9 @@ public class PlayerController : MonoBehaviour
     public List<Weapon> weapons;
     public Vector3 tileCheckCoordinates = Vector3.zero;
 
+    // For flipping the player model
+    private SpriteRenderer _spriteRenderer;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -111,7 +109,7 @@ public class PlayerController : MonoBehaviour
 
         tileManager.GenerateOutlineTiles(tileCheckCoordinates);
         selectedTile = availableTiles[0];
-        UIController.Instance.SetGameState(UIController.Gamestates.Running);
+        if (Instance) GamestateManager.SetGameState(GamestateManager.Gamestates.Running);
     }
 
     private void Awake()
@@ -136,12 +134,14 @@ public class PlayerController : MonoBehaviour
         _playerControls.Gameplay.PauseGame.performed += EscapePressed;
         _playerControls.Gameplay.ShowStatsMenu.started += ShowStatsMenu;
         _playerControls.Gameplay.ShowStatsMenu.canceled += ShowStatsMenu;
+
+        _spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!other.CompareTag("Enemy")) return;
-        Health -= other.gameObject.GetComponent<EnemyController>().damage;
+        Health -= other.gameObject.GetComponent<EnemyController>().Damage;
         Destroy(other.gameObject);
     }
 
@@ -157,17 +157,18 @@ public class PlayerController : MonoBehaviour
 
     public void ShopToggled(InputAction.CallbackContext context)
     {
+        Debug.Log("Shop Toggled");
         if (context.performed)
         {
-            switch (UIController.Instance.Gamestate)
+            switch (GamestateManager.Gamestate)
             {
-                case UIController.Gamestates.Running:
-                    UIController.Instance.SetGameState(UIController.Gamestates.Shop);
+                case GamestateManager.Gamestates.Running:
+                    GamestateManager.SetGameState(GamestateManager.Gamestates.Shop);
                     tileManager.GenerateOutlineTiles(new Vector3Int(0, 0, 0));;
                     tileManager.RenderTilesOnOutline(new ExtendedTile(new Vector3Int(0, 0, 0), _builder.validTileIndicator, true, false, false, false, true));
                     break;
-                case UIController.Gamestates.Shop:
-                    UIController.Instance.SetGameState(UIController.Gamestates.Running);
+                case GamestateManager.Gamestates.Shop:
+                    GamestateManager.SetGameState(GamestateManager.Gamestates.Running);
                     tileManager.ClearOutline();
                     break;
             }
@@ -193,9 +194,18 @@ public class PlayerController : MonoBehaviour
     // Apply Movement in FixedUpdate
     void FixedUpdate()
     {
-        if (Health <= 0) UIController.Instance.SetGameState(UIController.Gamestates.Dead);
+        if (Health <= 0) GamestateManager.SetGameState(GamestateManager.Gamestates.Dead);
         var movement = _playerControls.Gameplay.Move.ReadValue<Vector2>() * moveSpeed;
-        _rigidbody.MovePosition(_rigidbody.position + movement * Time.fixedDeltaTime);
+        
+        // Flip the Player sprite depending on the x movement
+        if ((movement.x > 0 && !_spriteRenderer.flipX) || (movement.x < 0 && _spriteRenderer.flipX))
+        {
+            _spriteRenderer.flipX = !_spriteRenderer.flipX;
+        }
+        
+        var nextPosition = _rigidbody.position + movement * Time.fixedDeltaTime;
+        var nextColliderPosition = nextPosition + new Vector2(0, -0.5f);
+        if (tileManager.GetTileAt(tileManager.tilemap.WorldToCell(nextColliderPosition)) != null) _rigidbody.MovePosition(_rigidbody.position + movement * Time.fixedDeltaTime);;
         // Todo: This does absolutely NOT need to be called in FixedUpdate
         Attack();
     }
@@ -204,15 +214,15 @@ public class PlayerController : MonoBehaviour
     {
         if (context.performed)
         {
-            switch (UIController.Instance.Gamestate)
+            switch (GamestateManager.Gamestate)
             {
-                case UIController.Gamestates.Running:
-                    UIController.Instance.SetGameState(UIController.Gamestates.Pause);
+                case GamestateManager.Gamestates.Running:
+                    GamestateManager.SetGameState(GamestateManager.Gamestates.Pause);
                     break;
-                case UIController.Gamestates.Pause:
-                    UIController.Instance.SetGameState(UIController.Gamestates.Running);
+                case GamestateManager.Gamestates.Pause:
+                    GamestateManager.SetGameState(GamestateManager.Gamestates.Running);
                     break;
-                case UIController.Gamestates.Shop:
+                case GamestateManager.Gamestates.Shop:
                     ShopToggled(context);
                     break;
             }
