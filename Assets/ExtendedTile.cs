@@ -5,6 +5,8 @@ using UnityEngine.Tilemaps;
 [System.Serializable]
 public class ExtendedTile
 {
+    // Display Name (for the shop)
+    public string DisplayName;
     // Unity Tile Object to draw
     public Tile DrawTile;
     // Does the Tile have Collision?
