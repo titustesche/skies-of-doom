@@ -8,11 +8,51 @@ using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController Instance { get; private set; }
     // Public
+    #region Base Stats
+    // Health
+    private int _health;
+    public int Health
+    {
+        get { return _health; } 
+        set { 
+            _health = value <= 0 ? 0 : value; 
+            UIController.Instance.UpdateStats(this);
+        }
+    }
+    private int _maxHealth;
+    public int MaxHealth
+    {
+        get { return _maxHealth; }
+        set
+        {
+            _maxHealth = value <= 0 ? 0 : value;
+            Health = _maxHealth;
+        }
+    }
+    
+    // Money
+    private int _money;
+
+    public int Money
+    {
+        get { return _money; } 
+        set {
+            _money = value <= 0 ? 0 : value;
+            UIController.Instance.UpdateStats(this);
+            if (UIController.Instance.Gamestate == UIController.Gamestates.Shop) ShopController.Instance.UpdateTileShop();
+        }
+    }
+    
+    // Movement Speed
+    public float moveSpeed = 5f;
+    #endregion
+    #region Modifiers
     public double damageMultplier = 1;
     public double healthMultiplier = 1;
     public double speedMultiplier = 1;
@@ -26,38 +66,33 @@ public class PlayerController : MonoBehaviour
             UIController.Instance.UpdateStats(this);
         }
     }
-    private int _health;
-
-    public int Health
-    {
-        get { return _health; } 
-        set { 
-            _health = value <= 0 ? 0 : value; 
-            UIController.Instance.UpdateStats(this);
-        }
-    }
-    private int _money;
-    public int Money { get { return _money; } set { _money = value <= 0 ? 0 : value; UIController.Instance.UpdateStats(this); } }
-    public float moveSpeed = 5f;
-    public List<Weapon> weapons;
+    
+    #endregion
+    #region Player States
+    
     public bool isInBuildMode;
-    public Vector3 tileCheckCoordinates = Vector3.zero;
     public List<ExtendedTile> availableTiles;
-    public TileManager tileManager;
+    
+    // Track Total scores for Stats Overlay
     private int _kills = 0;
     public int Kills { get { return _kills; } set { _kills = value <= 0 ? 0 : value; UIController.Instance.UpdateStats(this);} }
     private int _totalDamage = 0;
     public int TotalDamage { get { return _totalDamage; } set { _totalDamage = value <= 0 ? 0 : value; UIController.Instance.UpdateStats(this);} }
-    // Private
+    #endregion
+    #region Foreign Objects
+    public TileManager tileManager;
     private Rigidbody2D _rigidbody;
     private PlayerInput _playerInput;
     private PlayerControls _playerControls;
     private GameObject _player;
     private Builder _builder;
     private CircleCollider2D _collider;
+    #endregion
     
-    
-    
+    public ExtendedTile selectedTile;
+    public List<Weapon> weapons;
+    public Vector3 tileCheckCoordinates = Vector3.zero;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -75,6 +110,8 @@ public class PlayerController : MonoBehaviour
         tileManager.AddTileArray(spawnerTiles, availableTiles[2]);
 
         tileManager.GenerateOutlineTiles(tileCheckCoordinates);
+        selectedTile = availableTiles[0];
+        UIController.Instance.SetGameState(UIController.Gamestates.Running);
     }
 
     private void Awake()
@@ -94,9 +131,9 @@ public class PlayerController : MonoBehaviour
         _playerControls = new PlayerControls();
         _playerControls.Gameplay.Enable();
         _playerControls.Gameplay.MousePress.performed += ScreenTouched;
-        _playerControls.Gameplay.EnterShopMode.performed += EnterShop;
+        _playerControls.Gameplay.EnterShopMode.performed += ShopToggled;
 		_playerControls.Gameplay.TimeControl.performed += TimeControl;
-        _playerControls.Gameplay.PauseGame.performed += TogglePauseMenu;
+        _playerControls.Gameplay.PauseGame.performed += EscapePressed;
         _playerControls.Gameplay.ShowStatsMenu.started += ShowStatsMenu;
         _playerControls.Gameplay.ShowStatsMenu.canceled += ShowStatsMenu;
     }
@@ -118,26 +155,22 @@ public class PlayerController : MonoBehaviour
 		Debug.Log("Time wants to be controlled");
 	}
 
-    public void EnterShop(InputAction.CallbackContext context)
+    public void ShopToggled(InputAction.CallbackContext context)
     {
-        if (context.performed && UIController.Instance.Gamestate == UIController.Gamestates.Running)
+        if (context.performed)
         {
-            // Update build mode variable
-            isInBuildMode = !isInBuildMode;
-            
-            // If the player isn't in build mode
-            if (isInBuildMode)
+            switch (UIController.Instance.Gamestate)
             {
-                UIController.Instance.SetShop(true);
-                tileManager.GenerateOutlineTiles(new Vector3Int(0, 0, 0));;
-                tileManager.RenderTilesOnOutline(new ExtendedTile(new Vector3Int(0, 0, 0), _builder.validTileIndicator, true, false, false, false, true));
-                return;
+                case UIController.Gamestates.Running:
+                    UIController.Instance.SetGameState(UIController.Gamestates.Shop);
+                    tileManager.GenerateOutlineTiles(new Vector3Int(0, 0, 0));;
+                    tileManager.RenderTilesOnOutline(new ExtendedTile(new Vector3Int(0, 0, 0), _builder.validTileIndicator, true, false, false, false, true));
+                    break;
+                case UIController.Gamestates.Shop:
+                    UIController.Instance.SetGameState(UIController.Gamestates.Running);
+                    tileManager.ClearOutline();
+                    break;
             }
-            // _builder.drawTile = availableTiles[0];
-            // _builder.ToggleBuildMode();
-            UIController.Instance.SetShop(false);
-            tileManager.ClearOutline();
-            
         }
     }
 
@@ -145,14 +178,12 @@ public class PlayerController : MonoBehaviour
     {
         if (context.performed && SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Game"))
         {
-            // What to figure out:
-            // Where do we want to build
-            // What do we want to build
+            if (EventSystem.current.IsPointerOverGameObject()) return;
             var position = Camera.main.ScreenToWorldPoint(_playerControls.Gameplay.MousePosition.ReadValue<Vector2>());
             var tilePosition = _builder.tilemap.WorldToCell(position);
             tilePosition.z = 0;
-            
-            var tileToBuild = availableTiles[1];
+
+            var tileToBuild = selectedTile;
             tileToBuild.Position = tilePosition;
             tileToBuild.parentPlayer = this;
             _builder.Build(tileToBuild);
@@ -169,20 +200,20 @@ public class PlayerController : MonoBehaviour
         Attack();
     }
     
-    public void TogglePauseMenu(InputAction.CallbackContext context)
+    public void EscapePressed(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            switch (Time.timeScale)
+            switch (UIController.Instance.Gamestate)
             {
-                // Checking for the time scale is terrible
-                // but will do for now
-                case 0:
+                case UIController.Gamestates.Running:
+                    UIController.Instance.SetGameState(UIController.Gamestates.Pause);
+                    break;
+                case UIController.Gamestates.Pause:
                     UIController.Instance.SetGameState(UIController.Gamestates.Running);
                     break;
-                
-                default:
-                    UIController.Instance.SetGameState(UIController.Gamestates.Pause);
+                case UIController.Gamestates.Shop:
+                    ShopToggled(context);
                     break;
             }
         }
