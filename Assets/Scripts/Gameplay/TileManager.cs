@@ -193,7 +193,8 @@ namespace Gameplay
             {
                 var fixedPosition = position;
                 fixedPosition.z = 0;
-                AddTile(new ExtendedTile(fixedPosition, tile.DrawTile, tile.IsUiTile, tile.IsSpawnerTile, tile.IsEmpty, tile.IsIndicator));
+                tile.Position = fixedPosition;
+                AddTile(tile);
             }
         }
 
@@ -234,11 +235,13 @@ namespace Gameplay
                 }
                 
                 // Todo: This is deprecated wit the new spawning mechanic
+                /*
                 if (tile.IsSpawnerTile)
                 {
                     var spawner = Instantiate(enemySpawnerPrefab, tilemap.CellToWorld(tile.Position), Quaternion.identity);
                     tile.linkedObjects.Add(spawner);
                 }
+                */
                 
                 // Place in normal tilemap if the tile has no collision
                 if (!tile.HasCollision)
