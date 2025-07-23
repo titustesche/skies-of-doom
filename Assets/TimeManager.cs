@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class TimeManager : MonoBehaviour
@@ -10,9 +11,21 @@ public class TimeManager : MonoBehaviour
     private int _gameTimeSeconds;
     public int GameTimeSeconds { get => _gameTimeSeconds; set => _gameTimeSeconds = value > 0 ? value : 0; }
     
-    private int _gameTimeMinutes;
-    public int GameTimeMinutes { get => _gameTimeMinutes; set => _gameTimeMinutes = value > 0 ? value : 0; }
+    public event Action<int> MinuteElapsed;
     
+    private int _gameTimeMinutes;
+
+    public int GameTimeMinutes
+    {
+        get => _gameTimeMinutes;
+        set
+        {
+            if (_gameTimeMinutes == value) return;
+            _gameTimeMinutes = value > 0 ? value : 0;
+            MinuteElapsed?.Invoke(_gameTimeMinutes);
+        }
+    }
+
     private bool _running;
     public bool Running { get => _running; set => _running = value; }
 
@@ -30,21 +43,21 @@ public class TimeManager : MonoBehaviour
     void Update()
     {
         if (!_running) return;
-        _totalGameTimeSeconds += Time.deltaTime;
-        _gameTimeMinutes = (int)(_totalGameTimeSeconds / 60);
-        _gameTimeSeconds = (int)_totalGameTimeSeconds % 60;
+        TotalGameTimeSeconds += Time.deltaTime;
+        GameTimeMinutes = (int)(_totalGameTimeSeconds / 60);
+        GameTimeSeconds = (int)_totalGameTimeSeconds % 60;
     }
 
     public string GetNiceTime()
     {
-        return $"{_gameTimeMinutes:D2}:{_gameTimeSeconds:D2}";
+        return $"{GameTimeMinutes:D2}:{GameTimeSeconds:D2}";
     }
     
     public void ResetTimer()
     {
-        _totalGameTimeSeconds = 0;
-        _gameTimeSeconds = 0;
-        _gameTimeMinutes = 0;
-        _running = false;
+        TotalGameTimeSeconds = 0;
+        GameTimeSeconds = 0;
+        GameTimeMinutes = 0;
+        Running = false;
     }
 }
