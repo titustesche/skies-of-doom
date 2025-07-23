@@ -10,7 +10,8 @@ public class UIController : MonoBehaviour
     {
         Running,
         Pause,
-        Dead
+        Dead,
+        Shop,
     }
 
     public Gamestates Gamestate { get; private set; } = Gamestates.Running;
@@ -27,6 +28,7 @@ public class UIController : MonoBehaviour
     private TMP_Text _healthCounter;
     private TMP_Text _attackSpeedMultiplierCounter;
     private TMP_Text _damageMultiplierCounter;
+    private TMP_Text _timeCounter;
     
     private void Awake()
     {
@@ -47,6 +49,7 @@ public class UIController : MonoBehaviour
         _damageMultiplierCounter = StatsOverlay.transform.Find("Modifiers").transform.Find("DamageMultiplier").transform.Find("DamageMultiplierCounter").GetComponent<TMP_Text>();
         _moneyCounter = IngameOverlay.transform.Find("Money").transform.Find("MoneyText").GetComponent<TMP_Text>();
         _healthCounter = IngameOverlay.transform.Find("Health").transform.Find("HealthText").GetComponent<TMP_Text>();
+        _timeCounter = IngameOverlay.transform.Find("Time").transform.Find("TimeCounter").GetComponent<TMP_Text>();
     }
     
     #region Stats Overlay
@@ -72,28 +75,34 @@ public class UIController : MonoBehaviour
     }
     
     #endregion
-
-    public void SetShop(bool active)
-    {
-        ShopOverlay.SetActive(active);
-    }
-    
     #region Gamestate
 
     public void SetGameState(Gamestates state)
     {
+        UpdateStats(PlayerController.Instance);
+        if (state == Gamestate) return;
         Gamestate = state;
         switch (state)
         {
             case Gamestates.Running:
                 PauseMenu.SetActive(false);
                 IngameOverlay.SetActive(true);
+                ShopOverlay.SetActive(false);
+                TimeManager.Instance.Running = true;
                 Time.timeScale = 1;
+                break;
+            case Gamestates.Shop:
+                PauseMenu.SetActive(false);
+                ShopOverlay.SetActive(true);
+                ShopController.Instance.UpdateTileShop();
+                TimeManager.Instance.Running = true;
+                Time.timeScale = 0.5f;
                 break;
             case Gamestates.Pause:
                 PauseMenu.SetActive(true);
                 IngameOverlay.SetActive(false);
                 ShopOverlay.SetActive(false);
+                TimeManager.Instance.Running = false;
                 Time.timeScale = 0;
                 break;
             case Gamestates.Dead:
@@ -101,8 +110,18 @@ public class UIController : MonoBehaviour
                 IngameOverlay.SetActive(false);
                 ShopOverlay.SetActive(false);
                 PauseMenu.SetActive(false);
+                TimeManager.Instance.Running = false;
+                Time.timeScale = 0;
                 break;
         }
+    }
+    #endregion
+    #region Time Overlay
+
+    // Literally just update the time each frame
+    void Update()
+    {
+        _timeCounter.text = TimeManager.Instance.GetNiceTime();
     }
     #endregion
 
@@ -119,6 +138,7 @@ public class UIController : MonoBehaviour
     
     public void StartGame()
     {
+        Time.timeScale = 1;
         SceneManager.LoadScene("Game");
     }
 
