@@ -8,11 +8,16 @@ public class EnemyController : MonoBehaviour
 {
 
     [SerializeField] public float speed;
+    [SerializeField] public int damageMultiplier;
+    [SerializeField] public int healthMultiplier;
     private GameObject _targetPlayer;
     private PlayerController _targetPlayerController;
-    public int damage = 5;
-    public int health = 100;
+    private int _damage;
+    public int Damage { get => _damage; private set => _damage = value;}
+    private int _health;
+    public int Health { get => _health; private set => _health = value; }
     private Rigidbody2D _rigidbody;
+    
     public GameObject coinPrefab;
     public GameObject bloodParrticleSystem;
     // private Component targetPlayerController;
@@ -25,24 +30,24 @@ public class EnemyController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();
         
         // Randomize Strength
-        damage = Random.Range(2, 6);
-        health = Random.Range(5, 30);
-        speed = Random.Range(1.7f, 2.3f);
+        Damage = Random.Range(2, 6) * damageMultiplier;
+        Health = Random.Range(5, 30) * healthMultiplier;;
+        // speed = Random.Range(1.7f, 2.3f);
     }
 
     public void ReceiveDamage(PlayerController player, int amount)
     {
-        if (health > amount) { health -= amount; player.TotalDamage += amount; }
+        if (_health > amount) { _health -= amount; player.TotalDamage += amount; }
         
         // Moved from fixedUpdate so it doesn't get checked every .2 seconds
-        if (health <= amount)
+        if (_health <= amount)
         {
             var coin = Instantiate(coinPrefab, new Vector3(transform.position.x, transform.position.y, -1), Quaternion.identity);
             coin.GetComponent<CoinController>().value = Random.Range(1, 5);
             Instantiate(bloodParrticleSystem, new Vector3(transform.position.x, transform.position.y, 0), Quaternion.identity);
             Destroy(gameObject);
             player.Kills += 1;
-            player.TotalDamage += health;
+            player.TotalDamage += Health;
         }
     }
 
@@ -57,7 +62,7 @@ public class EnemyController : MonoBehaviour
         if ((transform.position - _targetPlayer.transform.position).magnitude <= 1.0f)
         {
             Debug.Log("Attempting to hit player");
-            _targetPlayerController.Health -= damage;
+            _targetPlayerController.Health -= Damage;
         }
     }
 }
